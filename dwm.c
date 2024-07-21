@@ -112,7 +112,7 @@ typedef struct {
 typedef struct Monitor Monitor;
 typedef struct Client Client;
 struct Client {
-	char name[256];
+	char name[60];
 	float mina, maxa;
 	float cfact;
 	int x, y, w, h;

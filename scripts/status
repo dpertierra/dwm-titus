@@ -14,7 +14,7 @@ update_memory() {
 }
 
 update_time() {
-  time=$(date "+%b %d %H:%M ")
+  time=$(date "+%H:%M %d/%m/%g")
 }
 
 update_weather() {
@@ -34,7 +34,15 @@ update_bat() {
 }
 
 update_vol() {
-  vol="奄 $(pactl list sinks | awk '/Volume:/ {print $5}' | head -n 1 | tr -d '%')%"
+  # Get the volume from the default sink using wpctl
+  volume_info=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
+
+  # Extract the volume value (remove "Volume: " prefix and get the numeric value)
+  volume_value=$(echo $volume_info | awk '{print $2}')
+
+  # Convert the volume to a percentage (assuming the volume value is between 0 and 1)
+  volume_percentage=$(echo "$volume_value * 100" | bc -l)
+  echo "$volume_percentage%"
 }
 
 update_backlight() {
@@ -48,8 +56,8 @@ update_backlight() {
 # Display function
 display() {
   status=""
-  [[ -n "$bat" ]] && status+="$bat "
-  [[ -n "$backlight" ]] && status+="$backlight "
+  # [[ -n "$bat" ]] && status+="$bat "
+  # [[ -n "$backlight" ]] && status+="$backlight "
   [[ -n "$vol" ]] && status+="$vol "
   [[ -n "$time" ]] && status+="$time"
   xsetroot -name "$status"

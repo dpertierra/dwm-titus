@@ -34,15 +34,20 @@ static const char *const autostart[] = {
   "xset", "s", "off", NULL,
   "xset", "s", "noblank", NULL,
   "xset", "-dpms", NULL,
-  "sh", "$HOME/.screenlayout/default.sh", NULL,
+  "sh", "-c", "$HOME/.screenlayout/default.sh", NULL,
   "dbus-update-activation-environment", "--systemd", "--all", NULL,
   "/usr/lib/polkit-kde-authentication-agent-1", NULL,
+  // "~/dwm-titus/scripts/status", NULL,
+  "dwmblocks", NULL,
+  "variety", NULL,
   "flameshot", NULL,
   "copyq", "--start-server", NULL,
+  "pasystray", NULL,
   "dunst", NULL,
   "picom", "--animations", "-b", NULL,
-  "sh", "-c", "feh --randomize --bg-fill /media/LinuxData/Wallpapers/*", NULL,
+  // "sh", "-c", "feh --randomize --bg-fill /media/LinuxData/Wallpapers/*", NULL,
   "nm-applet", NULL,
+  "blueman-applet", NULL,
   "megasync", NULL,
   "flatpak", "run", "dev.vencord.Vesktop", NULL,
   // "synergy", NULL,
@@ -96,17 +101,19 @@ static const Layout layouts[] = {
 /* commands */
 static const char *launchercmd[] = { "$HOME/.local/bin/run-rofi.sh", NULL };
 static const char *termcmd[]  = { "alacritty", NULL };
+static const char *lockcmd[]  = { "betterlockscreen", "-l", NULL };
 
 
 
 #include <X11/XF86keysym.h>
+
 static const char *volumeUp[] = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%+", NULL };
 static const char *volumeDown[] = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-", NULL };
 static const char *volumeMute[] = { "pactl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle", NULL };
 
 static Key keys[] = {
 	/* modifier                     key            function                argument */
-	{ Mod1Mask,                     XK_space,      spawn,                  {.v = launchercmd} }, // spawn rofi for launching other programs
+	{ Mod1Mask,                     XK_space,      spawn,                  SHCMD("$HOME/.local/bin/run-rofi.sh") }, // spawn rofi for launching other programs
 	{ MODKEY|ControlMask,           XK_r,          spawn,                  SHCMD ("protonrestart")}, // restart protonvpn
 	{ MODKEY,                       XK_t,          spawn,                  {.v = termcmd } }, // spawn a terminal
 	{ MODKEY,                       XK_b,          spawn,                  SHCMD ("xdg-open https://")}, // open default browser
@@ -115,12 +122,16 @@ static Key keys[] = {
 	{ 0,           XK_Print,          spawn,                  SHCMD ("flameshot gui")}, // copy screenshot to clipboard
 	{ MODKEY,                       XK_e,          spawn,                  SHCMD ("thunar")}, // open thunar file manager
 	// { MODKEY,                       XK_w,          spawn,                  SHCMD ("looking-glass-client -F")}, // start Looking glass
-	{ 0,                            XF86XK_AudioRaiseVolume,    spawn,                  {.v = volumeUp}}, // raise volume
-	{ 0,                            XF86XK_AudioLowerVolume,    spawn,                  {.v = volumeDown}}, // lower volume
-	{ 0,                            XF86XK_AudioMute,    spawn,                  {.v = volumeMute}}, // raise volume
+	// { 0,                            XF86XK_AudioRaiseVolume,    spawn,                  {.v = volumeUp}}, // raise volume
+	// { 0,                            XF86XK_AudioLowerVolume,    spawn,                  {.v = volumeDown}}, // lower volume
+	// { 0,                            XF86XK_AudioMute,    spawn,                  {.v = volumeMute}}, // raise volume
+	{ 0,                            XF86XK_AudioRaiseVolume,    spawn,                  SHCMD ("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+; kill -44 $(pidof dwmblocks)")}, // raise volume
+	{ 0,                            XF86XK_AudioLowerVolume,    spawn,                  SHCMD ("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-; kill -44 $(pidof dwmblocks)")}, // lower volume
+	{ 0,                            XF86XK_AudioMute,    spawn,                  SHCMD ("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; kill -44 $(pidof dwmblocks)")}, // raise volume
 
-	{ 0,                            0x1008ff12,    spawn,                  SHCMD ("amixer sset Master $(amixer get Master | grep -q '\\[on\\]' && echo 'mute' || echo 'unmute')")}, // toggle mute/unmute
-	{ 0,                            0x1008ff13,    spawn,                  SHCMD ("amixer sset Master 5%+ unmute")}, // unmute volume
+
+	// { 0,                            0x1008ff12,    spawn,                  SHCMD ("amixer sset Master $(amixer get Master | grep -q '\\[on\\]' && echo 'mute' || echo 'unmute')")}, // toggle mute/unmute
+	// { 0,                            0x1008ff13,    spawn,                  SHCMD ("amixer sset Master 5%+ unmute")}, // unmute volume
 	{ MODKEY|ShiftMask,             XK_b,          togglebar,              {0} }, // toggle bar visibility
 	{ MODKEY,                       XK_j,          focusstack,             {.i = +1 } }, // focus on the next client in the stack
 	{ MODKEY,                       XK_k,          focusstack,             {.i = -1 } }, // focus on the previous client in the stack
@@ -130,10 +141,12 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_k,          movestack,              {.i = -1 } }, // move stack down
 	{ MODKEY,                       XK_i,          incnmaster,             {.i = +1 } }, // decrease the number of clients in the master area
 	{ MODKEY,                       XK_d,          incnmaster,             {.i = -1 } }, // increase the number of clients in the master area
-	{ MODKEY,                       XK_h,          setmfact,               {.f = -0.05} }, // decrease the size of the master area compared to the stack area(s)
-	{ MODKEY,                       XK_l,          setmfact,               {.f = +0.05} }, // increase the size of the master area compared to the stack area(s)
+	// { MODKEY,                       XK_h,          setmfact,               {.f = -0.05} }, // decrease the size of the master area compared to the stack area(s)
+	// { MODKEY,                       XK_l,          setmfact,               {.f = +0.05} }, // increase the size of the master area compared to the stack area(s)
 	{ MODKEY|ShiftMask,             XK_h,          setcfact,               {.f = +0.25} }, // increase size respective to other windows within the same area
 	{ MODKEY|ShiftMask,             XK_l,          setcfact,               {.f = -0.25} }, // decrease client size respective to other windows within the same area
+	{ MODKEY|ShiftMask,             XK_Up,          setcfact,               {.f = +0.25} }, // increase size respective to other windows within the same area
+	{ MODKEY|ShiftMask,             XK_Down,          setcfact,               {.f = -0.25} }, // decrease client size respective to other windows within the same argument
 	{ MODKEY|ControlMask,                       XK_Left,          setmfact,               {.f = -0.05} }, // decrease the size of the master area compared to the stack area(s)
 	{ MODKEY|ControlMask,                       XK_Right,          setmfact,               {.f = +0.05} }, // increase the size of the master area compared to the stack area(s)
 	{ MODKEY|ShiftMask,             XK_Left,          setcfact,               {.f = +0.25} }, // increase size respective to other windows within the same area
@@ -146,7 +159,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_t,          setlayout,              {.v = &layouts[0]} }, // set tile layout
 	{ MODKEY,                       XK_f,          setlayout,              {.v = &layouts[1]} }, // set floating layout
 	{ MODKEY,                       XK_m,          fullscreen,             {0} }, // toggles fullscreen for the currently selected client
-	{ MODKEY,                       XK_space,      setlayout,              {-1} }, // toggles between current and previous layout
+	// { MODKEY,                       XK_space,      setlayout,              {-1} }, // toggles between current and previous layout
 	{ MODKEY|ShiftMask,             XK_m,          togglefloating,         {0} }, // toggles between tiled and floating arrangement for the currently focused client
 	{ MODKEY|ShiftMask,             XK_y,          togglefakefullscreen,   {0} }, // toggles "fake" fullscreen for the selected window
 	{ MODKEY,                       XK_0,          view,                   {.ui = ~0 } }, // view all tags on the current monitor
@@ -161,8 +174,9 @@ static Key keys[] = {
 	TAGKEYS(                        XK_3,                                  2)
 	TAGKEYS(                        XK_4,                                  3)
 	TAGKEYS(                        XK_5,                                  4)
+	{ MODKEY,			XK_l,     spawn,                       {.v = lockcmd }}, // exit dwm
 	{ MODKEY|ShiftMask,             XK_q,          quit,                   {0} }, // exit dwm
-	{ MODKEY|ControlMask,           XK_q,          spawn,                  SHCMD("$HOME/.local/bin/rofi-power-menu.sh")}, // exit dwm
+	{ MODKEY|ControlMask,           XK_q,          spawn,                  SHCMD("$HOME/.config/rofi/powermenu/type-4/powermenu.sh")}, // exit dwm
 	// { MODKEY|ControlMask|ShiftMask, XK_r,          spawn,                  SHCMD("systemctl reboot")}, // reboot system
 	// { MODKEY|ControlMask|ShiftMask, XK_s,          spawn,                  SHCMD("systemctl suspend")}, // suspend system
 };
